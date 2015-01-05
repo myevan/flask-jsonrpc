@@ -219,7 +219,6 @@ class JSONRPC(object):
             arg_names = getargspec(f)[0]
             X = {'name': name, 'arg_names': arg_names}
             if authenticated:
-                # TODO: this is an assumption
                 auth_arg_names = self.app.config.get(
                     'JSONRPC_AUTH_ARGUMENT_NAMES',
                     ['username', 'password'])
