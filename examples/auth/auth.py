@@ -58,4 +58,16 @@ def echo(name='Flask JSON-RPC'):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    if 1:
+        app.run(host='0.0.0.0', debug=True)
+    else:
+        import json
+        app.debug = True
+        with app.test_client() as client:
+            print(client.post(
+                '/api',
+                data=json.dumps(dict(
+                    jsonrpc='2.0',
+                    method='App.index',
+                    params=dict(username='USERNAME', password='PASSWORD'),
+                    id='1'))).data)
