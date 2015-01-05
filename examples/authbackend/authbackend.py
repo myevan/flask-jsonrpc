@@ -42,8 +42,10 @@ if os.path.exists(FLASK_JSONRPC_PROJECT_DIR) \
     sys.path.append(FLASK_JSONRPC_PROJECT_DIR)
 
 from flask_jsonrpc import JSONRPC
+from flask_jsonrpc.exceptions import InvalidParamsError, InvalidCredentialsError
 
 app = Flask(__name__)
+app.config['JSONRPC_AUTH_ARGUMENT_NAMES'] = ['custom_id', 'custom_pw']
 
 def authenticate(f, f_check_auth):
     @wraps(f)
@@ -55,14 +57,15 @@ def authenticate(f, f_check_auth):
             if is_auth:
                 args = args[2:]
         except IndexError:
-            if 'username' in kwargs and 'password' in kwargs:
-                is_auth = f_check_auth(kwargs['username'], kwargs['password'])
+            print kwargs
+            if 'custom_id' in kwargs and 'custom_pw' in kwargs:
+                is_auth = f_check_auth(kwargs['custom_id'], kwargs['custom_pw'])
                 if is_auth:
-                    kwargs.pop('username')
-                    kwargs.pop('password')
+                    kwargs.pop('custom_id')
+                    kwargs.pop('custom_pw')
             else:
                 raise InvalidParamsError('Authenticated methods require at least '
-                                         '[username, password] or {username: password:} arguments')
+                                         '[custom_id, custom_pw] or {custom_id: custom_pw:} arguments')
         if not is_auth:
             raise InvalidCredentialsError()
         return f(*args, **kwargs)
@@ -70,7 +73,7 @@ def authenticate(f, f_check_auth):
 
 jsonrpc = JSONRPC(app, '/api', auth_backend=authenticate)
 
-def check_auth(username, password):
+def check_auth(custom_id, custom_pw):
     return True
 
 @jsonrpc.method('App.index', authenticated=check_auth)
@@ -83,4 +86,16 @@ def echo(name=''):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    if 1:
+        app.run(host='0.0.0.0', debug=True)
+    else:
+        import json
+        app.debug = True
+        with app.test_client() as client:
+            print(client.post(
+                '/api',
+                data=json.dumps(dict(
+                    jsonrpc='2.0',
+                    method='App.index',
+                    params=dict(custom_id='USERNAME', custom_pw='PASSWORD'),
+                    id='1'))).data)
