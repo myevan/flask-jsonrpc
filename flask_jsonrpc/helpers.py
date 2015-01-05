@@ -81,14 +81,20 @@ def authenticate(f, f_check_auth):
             if is_auth:
                 args = args[2:]
         except IndexError:
-            if 'username' in kwargs and 'password' in kwargs:
-                is_auth = f_check_auth(kwargs['username'], kwargs['password'])
+            auth_arg_names = current_app.config.get(
+                'JSONRPC_AUTH_ARGUMENT_NAMES',
+                ['username', 'password'])
+
+            username_key, password_key = auth_arg_names
+            if username_key in kwargs and password_key in kwargs:
+                is_auth = f_check_auth(kwargs[username_key], kwargs[password_key])
                 if is_auth:
-                    kwargs.pop('username')
-                    kwargs.pop('password')
+                    kwargs.pop(username_key)
+                    kwargs.pop(password_key)
             else:
-                raise InvalidParamsError('Authenticated methods require at least '
-                                         '[username, password] or {username: password:} arguments')
+                raise InvalidParamsError(
+                    'Authenticated methods require at least [{0}, {1}] or {{{0}: {1}:}} arguments'.format('username', 'password'))
+
         if not is_auth:
             raise InvalidCredentialsError()
         return f(*args, **kwargs)
