@@ -19,3 +19,4 @@ src/**/build/*
 Flask_JSONRPC.egg-info/*
 build/*
 dist/*
+.idea
