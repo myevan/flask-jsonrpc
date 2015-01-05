@@ -220,8 +220,16 @@ class JSONRPC(object):
             X = {'name': name, 'arg_names': arg_names}
             if authenticated:
                 # TODO: this is an assumption
-                X['arg_names'] = ['username', 'password'] + X['arg_names']
-                X['name'] = _inject_args(X['name'], ('String', 'String'))
+                auth_arg_names = self.app.config.get(
+                    'JSONRPC_AUTH_ARGUMENT_NAMES',
+                    ['username', 'password'])
+
+                auth_arg_types = self.app.config.get(
+                    'JSONRPC_AUTH_ARGUMENT_TYPES',
+                    ['String', 'String'])
+
+                X['arg_names'] = auth_arg_names + X['arg_names']
+                X['name'] = _inject_args(X['name'], auth_arg_types)
                 _f = self.auth_backend(f, authenticated)
             else:
                 _f = f
