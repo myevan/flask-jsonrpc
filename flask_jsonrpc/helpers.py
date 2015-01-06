@@ -93,7 +93,9 @@ def authenticate(f, f_check_auth):
                     kwargs.pop(password_key)
             else:
                 raise InvalidParamsError(
-                    'Authenticated methods require at least [{0}, {1}] or {{{0}: {1}:}} arguments'.format('username', 'password'))
+                    'Authenticated methods require'
+                    'at least [{0}, {1}] or {{{0}: {1}:}} arguments'.format(
+                        username_key, password_key))
 
         if not is_auth:
             raise InvalidCredentialsError()
