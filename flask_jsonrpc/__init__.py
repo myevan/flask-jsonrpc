@@ -169,13 +169,16 @@ def _site_api(site):
 class JSONRPC(object):
 
     def __init__(self, app=None, service_url='/api', auth_backend=authenticate, site=default_site,
-                 enable_web_browsable_api=False):
+                 enable_web_browsable_api=False, auth_arg_names=['username', 'password'], auth_arg_types=['String', 'String']):
         self.service_url = service_url
         self.browse_url = self._make_browse_url(service_url)
         self.enable_web_browsable_api = enable_web_browsable_api
         self.auth_backend = auth_backend
+        self.auth_arg_names = auth_arg_names
+        self.auth_arg_types = auth_arg_types
         self.site = site
         self.site_api = _site_api(site)
+
         if app is not None:
             self.app = app
             self.init_app(self.app)
@@ -219,16 +222,8 @@ class JSONRPC(object):
             arg_names = getargspec(f)[0]
             X = {'name': name, 'arg_names': arg_names}
             if authenticated:
-                auth_arg_names = self.app.config.get(
-                    'JSONRPC_AUTH_ARGUMENT_NAMES',
-                    ['username', 'password'])
-
-                auth_arg_types = self.app.config.get(
-                    'JSONRPC_AUTH_ARGUMENT_TYPES',
-                    ['String', 'String'])
-
-                X['arg_names'] = auth_arg_names + X['arg_names']
-                X['name'] = _inject_args(X['name'], auth_arg_types)
+                X['arg_names'] = self.auth_arg_names + X['arg_names']
+                X['name'] = _inject_args(X['name'], self.auth_arg_types)
                 _f = self.auth_backend(f, authenticated)
             else:
                 _f = f
